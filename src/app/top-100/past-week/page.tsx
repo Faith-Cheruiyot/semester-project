@@ -1,6 +1,17 @@
 import PopularCaptionsPage from "@/components/popular-captions-page";
 import { TOP_100_FILTER_HREFS } from "@/lib/top-100";
+import type { GallerySearchParams } from "@/lib/caption-gallery";
 
-export default function Top100PastWeekPage() {
-  return <PopularCaptionsPage initialFilter="week" {...TOP_100_FILTER_HREFS} />;
+export default function Top100PastWeekPage({
+  searchParams,
+}: {
+  searchParams: GallerySearchParams;
+}) {
+  return (
+    <PopularCaptionsPage
+      initialFilter="week"
+      searchParams={searchParams}
+      {...TOP_100_FILTER_HREFS}
+    />
+  );
 }
