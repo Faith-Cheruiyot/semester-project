@@ -365,24 +365,6 @@ export default function PopularCaptionsPageClient({
 
   return (
     <div className="container mx-auto px-1 py-1">
-      {/* Mobile-only Get Crackd Box */}
-      <div className="block sm:hidden w-full mb-8">
-        <div
-          className="bg-gray-50 dark:bg-neutral-800 rounded-2xl p-8 flex
-                      flex-col items-center justify-center"
-        >
-          <div className="relative w-24 h-24 mb-4">
-            <BrandImage variant="mark" alt="Crackd Logo" className="w-full h-full" />
-          </div>
-          <h2
-            className="text-gray-900 dark:text-white text-4xl font-bold
-                        tracking-tight scale-y-150"
-          >
-            GET CRACKD
-          </h2>
-        </div>
-      </div>
-
       <div className="flex justify-center mb-8 relative" style={{ height: "44px" }}>
         <div
           className="relative flex justify-between w-full max-w-[470px] h-[36px] sm:h-[44px] 

@@ -37,6 +37,8 @@ Ask the PM to try finding a remembered caption without coaching. Discuss whether
 
 ## PM feedback log
 
+Student feedback after the first version: the student disliked the large “GET CRACKD” title. The mobile title panel was removed so the time filters and search appear sooner. This is student feedback; the PM review below is still pending.
+
 Review status: **Not yet conducted**. Replace the pending fields with actual observations after the demonstration.
 
 | Item | Actual feedback |
