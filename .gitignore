@@ -1,0 +1,29 @@
+# Dependencies and build output
+/node_modules/
+/.next/
+/out/
+/dist/
+/build/
+/coverage/
+*.tsbuildinfo
+/next-env.d.ts
+
+# Hosting and infrastructure state
+/.sst/
+/.vercel/
+
+# Local environment and credentials
+.env*
+!.env.example
+.restore-password*
+*.pem
+*.key
+
+# Editor, OS, and debug files
+/.idea/
+/.vscode/
+.DS_Store
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
