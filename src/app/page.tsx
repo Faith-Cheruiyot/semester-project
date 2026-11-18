@@ -5,7 +5,7 @@ import type { GallerySearchParams } from "@/lib/caption-gallery";
 export default function Home({ searchParams }: { searchParams: GallerySearchParams }) {
   return (
     <PopularCaptionsPage
-      initialFilter="week"
+      initialFilter="all"
       searchParams={searchParams}
       {...TOP_100_FILTER_HREFS}
     />

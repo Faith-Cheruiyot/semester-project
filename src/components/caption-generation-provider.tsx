@@ -153,7 +153,8 @@ export function CaptionGenerationProvider({ children }: { children: ReactNode })
         aria-label="Caption notifications"
         aria-live="polite"
         aria-relevant="additions text"
-        className="pointer-events-none fixed bottom-4 right-4 z-[110] flex max-h-[calc(100dvh-2rem)]
+        className="app-caption-notifications pointer-events-none fixed bottom-4 right-4 z-[110]
+          flex max-h-[calc(100dvh-2rem)]
           w-[calc(100%-2rem)] max-w-sm flex-col gap-3 overflow-y-auto"
       >
         {progressNotices.map(notice => (

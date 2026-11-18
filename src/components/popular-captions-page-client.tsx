@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  useEffect,
-  useRef,
-  useState,
-  useTransition,
-  type FormEvent,
-} from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import {
   fetchCaptionGalleryPageAction,
 } from "@/app/actions/captions/fetch-popular-captions-action";
@@ -20,24 +14,19 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import ShareModal from "@/components/share-modal";
 import { CaptionGridSkeleton } from "@/components/ui/image-grid-skeleton";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { LoginPromptModal } from "@/components/ui/login-prompt-modal";
 import Link from "next/link";
-import { ChevronUp, ChevronDown, Search, X, LoaderCircle } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { ChevronUp, ChevronDown, LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   GALLERY_BATCH_SIZE,
-  GALLERY_SEARCH_MAX_LENGTH,
-  galleryHref,
-  normalizeGallerySearch,
   type GalleryCaption,
   type GalleryPeriod,
 } from "@/lib/caption-gallery";
 import { TOP_100_FILTER_HREFS } from "@/lib/top-100";
 import { buildCaptionShareUrl } from "@/utils/site-url";
 import { BrandImage } from "@/components/brand-image";
-import { CaptionSearchHighlight } from "@/components/caption-search-highlight";
 import {
   Tooltip,
   TooltipContent,
@@ -94,7 +83,6 @@ interface PopularCaptionsPageClientProps {
   initialCaptions?: PopularCaption[];
   initialUserVotes?: Record<string, 1 | -1 | null>;
   initialIsAuthenticated?: boolean;
-  initialSearch?: string;
   initialTotalCount?: number;
   initialError?: string;
 }
@@ -115,7 +103,6 @@ export default function PopularCaptionsPageClient({
   initialCaptions = [],
   initialUserVotes = {},
   initialIsAuthenticated = false,
-  initialSearch = "",
   initialTotalCount = initialCaptions.length,
   initialError = "",
 }: PopularCaptionsPageClientProps) {
@@ -125,7 +112,6 @@ export default function PopularCaptionsPageClient({
     useState<Record<string, 1 | -1 | null>>(initialUserVotes);
   const [isPending, startTransition] = useTransition();
   const [isNavigating, setIsNavigating] = useState(false);
-  const [searchInput, setSearchInput] = useState(initialSearch);
   const [totalCount, setTotalCount] = useState(initialTotalCount);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [loadMoreError, setLoadMoreError] = useState("");
@@ -135,7 +121,6 @@ export default function PopularCaptionsPageClient({
   const [visibleCount, setVisibleCount] = useState(8);
   const { toast } = useToast();
   const router = useRouter();
-  const pathname = usePathname();
   const isAuthenticated = initialIsAuthenticated;
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [savedCaptions, setSavedCaptions] = useState<string[]>([]);
@@ -321,22 +306,6 @@ export default function PopularCaptionsPageClient({
     };
   }, [selectedIndex, popularCaptions.length]);
 
-  const submitSearch = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const search = normalizeGallerySearch(searchInput);
-    setSearchInput(search);
-    if (search === initialSearch) return;
-    startTransition(() =>
-      router.push(galleryHref(pathname, search), { scroll: false }),
-    );
-  };
-
-  const clearSearch = () => {
-    setSearchInput("");
-    if (!initialSearch) return;
-    startTransition(() => router.push(pathname, { scroll: false }));
-  };
-
   const loadMore = async () => {
     if (isLoadingMore || isLoading) return;
     const nextVisible = Math.min(visibleCount + itemsPerPage, totalCount);
@@ -350,7 +319,6 @@ export default function PopularCaptionsPageClient({
     try {
       const page = await fetchCaptionGalleryPageAction({
         period: filter,
-        search: initialSearch,
         offset: popularCaptions.length,
         limit: GALLERY_BATCH_SIZE,
       });
@@ -402,7 +370,6 @@ export default function PopularCaptionsPageClient({
   const filterLabel = filterOptions.find(
     (option) => option.key === filter,
   )?.label;
-  const hasDraftSearch = normalizeGallerySearch(searchInput) !== initialSearch;
 
   return (
     <div className="arcade-gallery container mx-auto px-1">
@@ -416,7 +383,7 @@ export default function PopularCaptionsPageClient({
         {filterOptions.map(({ key, label }) => (
           <Link
             key={key}
-            href={galleryHref(filterHrefs[key], initialSearch)}
+            href={filterHrefs[key]}
             aria-current={filter === key ? "page" : undefined}
             onNavigate={() => {
               if (filter !== key) setIsNavigating(true);
@@ -428,131 +395,45 @@ export default function PopularCaptionsPageClient({
           </Link>
         ))}
       </nav>
-      <form
-        role="search"
-        aria-label="Search the caption gallery"
-        action={pathname}
-        method="get"
-        onSubmit={submitSearch}
-        className="arcade-search-panel"
-      >
-        <div>
-          <label htmlFor="caption-search" className="arcade-search-title">
-            Find a caption
-          </label>
-          <p
-            id="caption-search-help"
-            className="mt-1 text-sm text-muted-foreground"
-          >
-            Find a word or phrase in the selected time range.
-          </p>
-        </div>
-        <div className="arcade-search-actions">
-          <div className="relative min-w-0 flex-1">
-            <Search
-              className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground"
-              aria-hidden
-            />
-            <Input
-              id="caption-search"
-              type="search"
-              name="q"
-              value={searchInput}
-              onChange={(event) => setSearchInput(event.target.value)}
-              placeholder="Try Butler, midterms, or a phrase…"
-              maxLength={GALLERY_SEARCH_MAX_LENGTH}
-              disabled={isLoading}
-              aria-describedby="caption-search-help caption-search-draft caption-search-status"
-              aria-controls="caption-gallery-results"
-              className="h-10 pl-10"
-            />
-          </div>
-          <Button type="submit" disabled={isLoading} className="h-10 gap-2">
-            {isLoading ? (
-              <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden />
-            ) : (
-              <Search className="h-4 w-4" aria-hidden />
-            )}
-            {isLoading ? "Loading…" : "Search"}
-          </Button>
-          {(searchInput || initialSearch) && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={clearSearch}
-              disabled={isLoading}
-              className="h-10 gap-2"
-            >
-              <X className="h-4 w-4" aria-hidden /> Clear search
-            </Button>
-          )}
-        </div>
+      <div className="app-gallery-toolbar">
         <p
-          id="caption-search-draft"
-          hidden={!hasDraftSearch || isLoading}
-          role="status"
-          className="mt-4 text-sm font-semibold text-primary"
-        >
-          Search not applied yet. Press Search or Enter to update your results.
-        </p>
-        <p
-          id="caption-search-status"
+          id="caption-gallery-status"
           role="status"
           aria-live="polite"
-          aria-atomic="true"
-          className="arcade-search-status"
+          className="app-gallery-status"
         >
           {isLoading
             ? "Loading captions…"
             : initialError
               ? ""
-              : initialSearch
-                ? totalCount +
-                  (totalCount === 1 ? " match" : " matches") +
-                  " for “" +
-                  initialSearch +
-                  "” in " +
-                  filterLabel +
-                  ". Showing " +
-                  visibleCaptions.length +
-                  "."
-                : "Showing " +
-                  visibleCaptions.length +
-                  " of " +
-                  totalCount +
-                  " captions in " +
-                  filterLabel +
-                  "."}
+              : `Showing ${visibleCaptions.length} of ${totalCount} captions in ${filterLabel}.`}
         </p>
-      </form>
-      <div className="arcade-toolbar">
-        <Button asChild variant="secondary" size="sm">
-          <Link href="/new">New post</Link>
-        </Button>
-        <div className="flex items-center gap-2">
-          <label
-            htmlFor="caption-page-size"
-            className="text-sm text-muted-foreground"
-          >
-            Show
-          </label>
-          <select
-            id="caption-page-size"
-            aria-label="Captions to show at a time"
-            value={itemsPerPage}
-            onChange={(event) => handleItemsPerPageChange(event.target.value)}
-            disabled={isLoading || isLoadingMore}
-            className="rounded-lg border border-primary/20 bg-background px-3 py-2 text-sm
+        <div className="arcade-toolbar">
+          <div className="flex items-center gap-2">
+            <label
+              htmlFor="caption-page-size"
+              className="text-sm text-muted-foreground"
+            >
+              Show
+            </label>
+            <select
+              id="caption-page-size"
+              aria-label="Captions to show at a time"
+              value={itemsPerPage}
+              onChange={(event) => handleItemsPerPageChange(event.target.value)}
+              disabled={isLoading || isLoadingMore}
+              className="rounded-lg border border-primary/20 bg-background px-3 py-2 text-sm
                   text-primary focus-visible:outline-none
                   focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            {[4, 8, 12, 16, 20, 24].map((value) => (
-              <option key={value} value={value}>
-                {value}
-              </option>
-            ))}
-          </select>
-          <span className="text-sm text-muted-foreground">at a time</span>
+            >
+              {[4, 8, 12, 16, 20, 24].map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
+            </select>
+            <span className="text-sm text-muted-foreground">at a time</span>
+          </div>
         </div>
       </div>
       <section
@@ -579,39 +460,26 @@ export default function PopularCaptionsPageClient({
         ) : visibleCaptions.length === 0 ? (
           <div className="arcade-empty">
             <h2 className="text-lg font-semibold">
-              {initialSearch
-                ? "No matches in " + filterLabel
-                : "No captions in " + filterLabel}
+              No captions in {filterLabel}
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              {initialSearch
-                ? "No public captions in this time range match “" +
-                  initialSearch +
-                  "”."
-                : "There are no public captions in this time range."}
+              There are no public captions in this time range.
             </p>
             <p className="mt-2 text-sm text-muted-foreground">
               {filter !== "all"
                 ? "Try All Time to look beyond this time range."
-                : initialSearch
-                  ? "Try fewer words or check the spelling."
-                  : "Check back soon for more captions."}
+                : "Check back soon for more captions."}
             </p>
             <div className="mt-4 flex flex-wrap justify-center gap-3">
               {filter !== "all" && (
                 <Button asChild>
                   <Link
-                    href={galleryHref(allTimeHref, initialSearch)}
+                    href={allTimeHref}
                     onNavigate={() => setIsNavigating(true)}
                     scroll={false}
                   >
-                    {initialSearch ? "Search all time" : "Browse all time"}
+                    Browse all time
                   </Link>
-                </Button>
-              )}
-              {initialSearch && (
-                <Button type="button" variant="outline" onClick={clearSearch}>
-                  Clear search
                 </Button>
               )}
             </div>
@@ -739,10 +607,7 @@ export default function PopularCaptionsPageClient({
                         focus-visible:ring-inset focus-visible:ring-primary"
                     >
                       <span className="arcade-caption-copy">
-                        <CaptionSearchHighlight
-                          text={caption.content}
-                          query={initialSearch}
-                        />
+                        {caption.content}
                       </span>
                       <span className="arcade-caption-art">
                         <Top100CaptionImage
@@ -827,7 +692,6 @@ export default function PopularCaptionsPageClient({
           savedCaptionIds={savedCaptions}
           onSave={handleSlideSave}
           wrapNavigation
-          highlightQuery={initialSearch}
         />
       )}
       {/* Login Prompt Modal */}
