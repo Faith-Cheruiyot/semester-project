@@ -1,4 +1,3 @@
-import { ThemeProvider } from "next-themes";
 import { Suspense } from "react";
 import { Poppins, Merriweather_Sans, Silkscreen } from "next/font/google";
 import Link from "next/link";
@@ -9,7 +8,6 @@ import { HeaderSearch } from "@/components/header-search";
 import { Toaster } from "@/components/ui/toaster";
 import { createClient } from "@/utils/supabase/server";
 import { BugReportDialog } from "@/components/bug-report-dialog";
-import { ThemeFavicon } from "@/components/theme-favicon";
 import { CaptionGenerationProvider } from "@/components/caption-generation-provider";
 
 import "./globals.css";
@@ -21,15 +19,9 @@ const appEnvironment = (
 ).toLowerCase();
 const isProduction = appEnvironment === "production";
 const environmentTag = isProduction ? "prod" : "nonprod";
-const faviconIcons = isProduction
-  ? [
-      { url: "/favicon-light.svg" },
-      { url: "/favicon-dark.svg", media: "(prefers-color-scheme: dark)" },
-    ]
-  : [
-      { url: "/favicon-light-nonprod.svg" },
-      { url: "/favicon-nonprod.svg", media: "(prefers-color-scheme: dark)" },
-    ];
+const faviconIcons = [
+  { url: isProduction ? "/favicon-light.svg" : "/favicon-light-nonprod.svg" },
+];
 const supportEmail =
   process.env.NEXT_PUBLIC_SUPPORT_EMAIL || "support@crackd.ai";
 const instagramUrl =
@@ -84,22 +76,14 @@ export default async function RootLayout({
     <html
       lang="en"
       data-env={environmentTag}
-      className={merriweatherSans.className}
-      suppressHydrationWarning
+      className={`${merriweatherSans.className} light`}
+      style={{ colorScheme: "light" }}
     >
       <body
         className={`font-body bg-background text-foreground overflow-x-hidden ${
           poppins.variable
         } ${merriweatherSans.variable} ${arcadeFont.variable} antialiased`}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-          storageKey="crackd-theme"
-        >
-          <ThemeFavicon />
           <main className="app-shell">
             <AppSidebar />
             <div className="app-workspace">
@@ -270,7 +254,6 @@ export default async function RootLayout({
             </div>
           </main>
           <Toaster />
-        </ThemeProvider>
       </body>
     </html>
   );

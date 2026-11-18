@@ -9,13 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuSubContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
 } from "./ui/dropdown-menu";
-import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { fetchUserProfileAction } from "@/app/actions/profile";
 
@@ -33,18 +27,15 @@ export function UserHeaderMenu({
   lastName: initialLastName,
   isAuthenticated = true,
 }: UserHeaderMenuProps) {
-  const [mounted, setMounted] = useState(false);
   const [firstName, setFirstName] = useState<string | null>(
     initialFirstName ?? null,
   );
   const [lastName, setLastName] = useState<string | null>(
     initialLastName ?? null,
   );
-  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     let active = true;
-    const id = requestAnimationFrame(() => setMounted(true));
 
     // Try to fetch user's name
     const fetchUserName = async () => {
@@ -62,7 +53,6 @@ export function UserHeaderMenu({
     if (isAuthenticated) fetchUserName();
     return () => {
       active = false;
-      cancelAnimationFrame(id);
     };
   }, [isAuthenticated]);
 
@@ -128,30 +118,6 @@ export function UserHeaderMenu({
               <Link href="/sign-up">Sign up</Link>
             </DropdownMenuItem>
           </>
-        )}
-
-        {mounted && (
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger className="cursor-pointer">
-              Theme
-            </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent className="w-48">
-              <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
-                <DropdownMenuRadioItem value="light" className="cursor-pointer">
-                  Light
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="dark" className="cursor-pointer">
-                  Dark
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem
-                  value="system"
-                  className="cursor-pointer"
-                >
-                  System
-                </DropdownMenuRadioItem>
-              </DropdownMenuRadioGroup>
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
         )}
 
         {isAuthenticated && (
