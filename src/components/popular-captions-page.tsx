@@ -5,6 +5,7 @@ import { fetchUserCaptionVotesAction } from "@/app/actions/captions";
 import { checkAuthStatusAction } from "@/app/actions/auth/check-auth-status";
 import PopularCaptionsPageClient from "@/components/popular-captions-page-client";
 import {
+  normalizeGallerySearch,
   type GalleryPage,
   type GalleryPeriod,
   type GallerySearchParams,
@@ -21,13 +22,20 @@ interface PopularCaptionsPageProps {
 
 export default async function PopularCaptionsPage({
   initialFilter = "week",
+  searchParams,
   ...filterHrefs
 }: PopularCaptionsPageProps) {
-  // Header search is a text-only preview; gallery browsing stays unfiltered for now.
+  const params = await searchParams;
+  const search = normalizeGallerySearch(
+    Array.isArray(params?.q) ? params.q[0] : params?.q,
+  );
   let page: GalleryPage = { captions: [], totalCount: 0 };
   let initialError = "";
   try {
-    page = await fetchCaptionGalleryPageAction({ period: initialFilter });
+    page = await fetchCaptionGalleryPageAction({
+      period: initialFilter,
+      search,
+    });
   } catch {
     initialError = "We couldn’t load the captions. Please try again.";
   }
@@ -42,8 +50,9 @@ export default async function PopularCaptionsPage({
 
   return (
     <PopularCaptionsPageClient
-      key={`${initialFilter}:${initialError ? "error" : "loaded"}`}
+      key={`${initialFilter}:${search}:${initialError ? "error" : "loaded"}`}
       initialFilter={initialFilter}
+      initialSearch={search}
       initialTotalCount={page.totalCount}
       initialError={initialError}
       {...filterHrefs}

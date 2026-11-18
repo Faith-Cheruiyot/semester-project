@@ -1,4 +1,5 @@
 import { ThemeProvider } from "next-themes";
+import { Suspense } from "react";
 import { Poppins, Merriweather_Sans, Silkscreen } from "next/font/google";
 import Link from "next/link";
 
@@ -103,7 +104,9 @@ export default async function RootLayout({
             <AppSidebar />
             <div className="app-workspace">
               <header className="app-topbar">
-                <HeaderSearch />
+                <Suspense fallback={<div className="app-search" aria-busy="true" />}>
+                  <HeaderSearch />
+                </Suspense>
                 <HeaderAuth user={user} />
               </header>
               <div className="app-content">

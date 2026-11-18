@@ -21,12 +21,14 @@ import { ChevronUp, ChevronDown, LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   GALLERY_BATCH_SIZE,
+  galleryHref,
   type GalleryCaption,
   type GalleryPeriod,
 } from "@/lib/caption-gallery";
 import { TOP_100_FILTER_HREFS } from "@/lib/top-100";
 import { buildCaptionShareUrl } from "@/utils/site-url";
 import { BrandImage } from "@/components/brand-image";
+import { CaptionSearchHighlight } from "@/components/caption-search-highlight";
 import {
   Tooltip,
   TooltipContent,
@@ -83,6 +85,7 @@ interface PopularCaptionsPageClientProps {
   initialCaptions?: PopularCaption[];
   initialUserVotes?: Record<string, 1 | -1 | null>;
   initialIsAuthenticated?: boolean;
+  initialSearch?: string;
   initialTotalCount?: number;
   initialError?: string;
 }
@@ -103,6 +106,7 @@ export default function PopularCaptionsPageClient({
   initialCaptions = [],
   initialUserVotes = {},
   initialIsAuthenticated = false,
+  initialSearch = "",
   initialTotalCount = initialCaptions.length,
   initialError = "",
 }: PopularCaptionsPageClientProps) {
@@ -319,6 +323,7 @@ export default function PopularCaptionsPageClient({
     try {
       const page = await fetchCaptionGalleryPageAction({
         period: filter,
+        search: initialSearch,
         offset: popularCaptions.length,
         limit: GALLERY_BATCH_SIZE,
       });
@@ -383,7 +388,7 @@ export default function PopularCaptionsPageClient({
         {filterOptions.map(({ key, label }) => (
           <Link
             key={key}
-            href={filterHrefs[key]}
+            href={galleryHref(filterHrefs[key], initialSearch)}
             aria-current={filter === key ? "page" : undefined}
             onNavigate={() => {
               if (filter !== key) setIsNavigating(true);
@@ -406,7 +411,10 @@ export default function PopularCaptionsPageClient({
             ? "Loading captions…"
             : initialError
               ? ""
-              : `Showing ${visibleCaptions.length} of ${totalCount} captions in ${filterLabel}.`}
+              : initialSearch
+                ? `${totalCount} ${totalCount === 1 ? "match" : "matches"} for ` +
+                  `“${initialSearch}” in ${filterLabel}. Showing ${visibleCaptions.length}.`
+                : `Showing ${visibleCaptions.length} of ${totalCount} captions in ${filterLabel}.`}
         </p>
         <div className="arcade-toolbar">
           <div className="flex items-center gap-2">
@@ -460,25 +468,41 @@ export default function PopularCaptionsPageClient({
         ) : visibleCaptions.length === 0 ? (
           <div className="arcade-empty">
             <h2 className="text-lg font-semibold">
-              No captions in {filterLabel}
+              {initialSearch ? "No matches in " : "No captions in "}
+              {filterLabel}
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              There are no public captions in this time range.
+              {initialSearch
+                ? `No public captions in this time range match “${initialSearch}”.`
+                : "There are no public captions in this time range."}
             </p>
             <p className="mt-2 text-sm text-muted-foreground">
               {filter !== "all"
                 ? "Try All Time to look beyond this time range."
-                : "Check back soon for more captions."}
+                : initialSearch
+                  ? "Try fewer words or check the spelling."
+                  : "Check back soon for more captions."}
             </p>
             <div className="mt-4 flex flex-wrap justify-center gap-3">
               {filter !== "all" && (
                 <Button asChild>
                   <Link
-                    href={allTimeHref}
+                    href={galleryHref(allTimeHref, initialSearch)}
                     onNavigate={() => setIsNavigating(true)}
                     scroll={false}
                   >
-                    Browse all time
+                    {initialSearch ? "Search all time" : "Browse all time"}
+                  </Link>
+                </Button>
+              )}
+              {initialSearch && (
+                <Button asChild variant="outline">
+                  <Link
+                    href={filterHrefs[filter]}
+                    onNavigate={() => setIsNavigating(true)}
+                    scroll={false}
+                  >
+                    Clear search
                   </Link>
                 </Button>
               )}
@@ -607,7 +631,10 @@ export default function PopularCaptionsPageClient({
                         focus-visible:ring-inset focus-visible:ring-primary"
                     >
                       <span className="arcade-caption-copy">
-                        {caption.content}
+                        <CaptionSearchHighlight
+                          text={caption.content}
+                          query={initialSearch}
+                        />
                       </span>
                       <span className="arcade-caption-art">
                         <Top100CaptionImage
@@ -692,6 +719,7 @@ export default function PopularCaptionsPageClient({
           savedCaptionIds={savedCaptions}
           onSave={handleSlideSave}
           wrapNavigation
+          highlightQuery={initialSearch}
         />
       )}
       {/* Login Prompt Modal */}

@@ -1,5 +1,8 @@
 # Home layout revision
 
+Update later on November 18: [header caption search is now enabled](header-search-fix.md).
+The text-only behavior below records the earlier prototype, which it supersedes.
+
 On November 18, 2026, the student supplied a Pinterest screenshot and requested a similar header search field, a sidebar containing Home, Create, and Your saved, and a circular profile control. The student explicitly requested that search only accept text for now. This is a student request, not PM feedback.
 
 ## Current behavior
