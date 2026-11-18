@@ -10,10 +10,7 @@ export function CaptionSearchHighlight({
 }) {
   return captionMatchParts(text, query).map((part, index) =>
     part.matched ? (
-      <mark
-        key={index}
-        className="rounded-sm bg-primary/25 px-0.5 text-inherit ring-1 ring-primary/30"
-      >
+      <mark key={index} className="arcade-search-match">
         {part.text}
       </mark>
     ) : (

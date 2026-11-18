@@ -1,5 +1,5 @@
 import { ThemeProvider } from "next-themes";
-import { Poppins, Merriweather_Sans } from "next/font/google";
+import { Poppins, Merriweather_Sans, Silkscreen } from "next/font/google";
 import Link from "next/link";
 
 import HeaderAuth from "@/components/header-auth";
@@ -56,6 +56,13 @@ const merriweatherSans = Merriweather_Sans({
   subsets: ["latin"],
 });
 
+const arcadeFont = Silkscreen({
+  variable: "--font-arcade",
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  display: "swap",
+});
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -78,7 +85,7 @@ export default async function RootLayout({
       <body
         className={`font-body bg-background text-foreground overflow-x-hidden ${
           poppins.variable
-        } ${merriweatherSans.variable} antialiased`}
+        } ${merriweatherSans.variable} ${arcadeFont.variable} antialiased`}
       >
         <ThemeProvider
           attribute="class"
@@ -90,7 +97,7 @@ export default async function RootLayout({
           <ThemeFavicon />
           <main className="min-h-screen flex flex-col items-center">
             <div className="w-full flex flex-col gap-4">
-              <nav className="w-full flex justify-center border-b border-b-foreground/10 h-24">
+              <nav className="arcade-site-header w-full flex justify-center">
                 <div
                   className="w-full max-w-6xl flex justify-between items-center p-3
                                 px-5 text-sm"
@@ -120,7 +127,7 @@ export default async function RootLayout({
             </div>
 
             {/* Footer */}
-            <footer className="w-full py-14 mt-8">
+            <footer className="arcade-site-footer w-full py-10 mt-16">
               {/* Full-width Divider */}
               <div className="w-full h-[1px] bg-muted-foreground/10 my-8" />
               <div className="max-w-6xl mx-auto px-8">

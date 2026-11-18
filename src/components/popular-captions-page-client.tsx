@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition, type FormEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+  type FormEvent,
+} from "react";
 import {
   fetchCaptionGalleryPageAction,
 } from "@/app/actions/captions/fetch-popular-captions-action";
@@ -43,11 +49,15 @@ import { BookmarkButton } from "@/components/ui/bookmark-button";
 import { Top100CaptionImage } from "@/components/top-100-caption-image";
 
 // functions to load in our pregenrated thumbnails
-const THUMBNAIL_SIZES = [320, 480, 640, 750, 828, 1080, 1200, 1920, 2048, 3840] as const;
+const THUMBNAIL_SIZES = [
+  320, 480, 640, 750, 828, 1080, 1200, 1920, 2048, 3840,
+] as const;
 
 const parseImageUrl = (url: string) => {
   // expects: https://images.domain.com/<userId>/<imageId>.<ext>
-  const match = url.match(/https?:\/\/[^\/]+\/([^\/]+)\/([^\/\?]+)\.([^\/\?\s]+)/);
+  const match = url.match(
+    /https?:\/\/[^\/]+\/([^\/]+)\/([^\/\?]+)\.([^\/\?\s]+)/,
+  );
   if (match) {
     const [, userId, imageId, extension] = match;
     return { userId, imageId, extension };
@@ -64,9 +74,9 @@ const generateThumbnailUrls = (
   const basePath = `${baseUrl}/${userId}/${imageId}`;
   return {
     original: `${basePath}.${extension}`,
-    srcSet: THUMBNAIL_SIZES.map((size) => `${basePath}-${size}.${extension} ${size}w`).join(
-      ", ",
-    ),
+    srcSet: THUMBNAIL_SIZES.map(
+      (size) => `${basePath}-${size}.${extension} ${size}w`,
+    ).join(", "),
     gridUrl: `${basePath}-${THUMBNAIL_SIZES.find((s) => s >= 640) || 640}.${extension}`,
     blurUrl: `${basePath}-640.${extension}`,
   };
@@ -109,8 +119,10 @@ export default function PopularCaptionsPageClient({
   initialTotalCount = initialCaptions.length,
   initialError = "",
 }: PopularCaptionsPageClientProps) {
-  const [popularCaptions, setPopularCaptions] = useState<PopularCaption[]>(initialCaptions);
-  const [userVotes, setUserVotes] = useState<Record<string, 1 | -1 | null>>(initialUserVotes);
+  const [popularCaptions, setPopularCaptions] =
+    useState<PopularCaption[]>(initialCaptions);
+  const [userVotes, setUserVotes] =
+    useState<Record<string, 1 | -1 | null>>(initialUserVotes);
   const [isPending, startTransition] = useTransition();
   const [isNavigating, setIsNavigating] = useState(false);
   const [searchInput, setSearchInput] = useState(initialSearch);
@@ -170,7 +182,8 @@ export default function PopularCaptionsPageClient({
 
     const currentVote = userVotes[captionId] ?? null;
     const originalVote = currentVote;
-    const originalCount = popularCaptions.find((c) => c.id === captionId)?.like_count || 0;
+    const originalCount =
+      popularCaptions.find((c) => c.id === captionId)?.like_count || 0;
 
     // Optimistic update: determine new vote value
     let newVoteValue: 1 | -1 | null;
@@ -223,7 +236,9 @@ export default function PopularCaptionsPageClient({
       }));
       setPopularCaptions((prev) =>
         prev.map((caption) =>
-          caption.id === captionId ? { ...caption, like_count: originalCount } : caption,
+          caption.id === captionId
+            ? { ...caption, like_count: originalCount }
+            : caption,
         ),
       );
       toast({
@@ -270,11 +285,18 @@ export default function PopularCaptionsPageClient({
 
   useEffect(() => {
     const handleArrowKeys = (event: KeyboardEvent) => {
-      if (event.defaultPrevented || selectedIndex === null || !popularCaptions.length) return;
+      if (
+        event.defaultPrevented ||
+        selectedIndex === null ||
+        !popularCaptions.length
+      )
+        return;
       if (
         !(event.target instanceof HTMLElement) ||
         !event.target.closest("[data-caption-viewer]") ||
-        event.target.closest("input, textarea, select, [contenteditable='true']")
+        event.target.closest(
+          "input, textarea, select, [contenteditable='true']",
+        )
       )
         return;
 
@@ -304,7 +326,9 @@ export default function PopularCaptionsPageClient({
     const search = normalizeGallerySearch(searchInput);
     setSearchInput(search);
     if (search === initialSearch) return;
-    startTransition(() => router.push(galleryHref(pathname, search), { scroll: false }));
+    startTransition(() =>
+      router.push(galleryHref(pathname, search), { scroll: false }),
+    );
   };
 
   const clearSearch = () => {
@@ -333,7 +357,10 @@ export default function PopularCaptionsPageClient({
       if (request !== loadRequest.current) return;
       setPopularCaptions((previous) => {
         const ids = new Set(previous.map((caption) => caption.id));
-        return [...previous, ...page.captions.filter((caption) => !ids.has(caption.id))];
+        return [
+          ...previous,
+          ...page.captions.filter((caption) => !ids.has(caption.id)),
+        ];
       });
       setTotalCount(page.totalCount);
       setVisibleCount(nextVisible);
@@ -347,7 +374,8 @@ export default function PopularCaptionsPageClient({
         } catch {
           toast({
             title: "Captions loaded",
-            description: "Your votes could not be refreshed. Please reload before voting.",
+            description:
+              "Your votes could not be refreshed. Please reload before voting.",
           });
         }
       }
@@ -371,101 +399,55 @@ export default function PopularCaptionsPageClient({
 
   const visibleCaptions = popularCaptions.slice(0, visibleCount);
   const hasMore = visibleCaptions.length < totalCount;
-  const filterLabel = filterOptions.find((option) => option.key === filter)?.label;
+  const filterLabel = filterOptions.find(
+    (option) => option.key === filter,
+  )?.label;
   const hasDraftSearch = normalizeGallerySearch(searchInput) !== initialSearch;
 
   return (
-    <div className="container mx-auto px-1 py-1">
-      <div className="flex justify-center mb-8 relative" style={{ height: "44px" }}>
-        <div
-          className="relative flex justify-between w-full max-w-[470px] h-[36px] sm:h-[44px] 
-                      bg-transparent rounded-3xl mx-auto border border-[#666363] overflow-hidden"
-        >
-          {/* Primary Slider */}
-          <div
-            className={`absolute top-0 left-0 h-[36px] sm:h-[44px] w-1/4 rounded-[16px] 
-              bg-primary dark:bg-primary/40
-                       transition-all duration-300 ${
-                         filter === "week"
-                           ? "rounded-l-3xl rounded-r-none"
-                           : filter === "all"
-                             ? "rounded-r-3xl rounded-l-none"
-                             : "rounded-none"
-                       }`}
-            style={{
-              transform: `translateX(${
-                filter === "week"
-                  ? 0
-                  : filter === "past30"
-                    ? 100
-                    : filter === "year"
-                      ? 200
-                      : 300
-              }%)`,
-            }}
-          />
-
-          {/* Buttons */}
-          {filterOptions.map(({ key, label }) => {
-            const isActive = filter === key;
-            const className = `relative w-1/4 h-full flex items-center justify-center
-                          text-xs sm:text-sm md:text-base font-normal leading-[120%]
-                          tracking-[-0.02em] z-10 transition-colors 
-                          duration-200 ${
-                            isActive
-                              ? "text-white dark:text-white border-2 border-primary"
-                              : "text-gray-800 dark:text-[#9A9A9A]"
-                          } ${
-                            key === "week"
-                              ? "rounded-l-3xl rounded-r-none"
-                              : key === "all"
-                                ? "rounded-r-3xl rounded-l-none"
-                                : "rounded-none"
-                          }`;
-
-            return (
-              <Link
-                key={key}
-                href={galleryHref(filterHrefs[key], initialSearch)}
-                aria-current={isActive ? "page" : undefined}
-                onNavigate={() => {
-                  if (!isActive) setIsNavigating(true);
-                }}
-                className={className}
-                scroll={false}
-              >
-                {label}
-              </Link>
-            );
-          })}
-
-          {/* Vertical Borders */}
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="absolute top-0 bottom-0 w-[2px] bg-[#666363]"
-              style={{ left: `${i * 25}%` }}
-            />
-          ))}
-        </div>
+    <div className="arcade-gallery container mx-auto px-1">
+      <div className="arcade-scenery" aria-hidden="true">
+        <span className="arcade-cloud arcade-cloud-one" />
+        <span className="arcade-cloud arcade-cloud-two" />
+        <span className="arcade-cloud arcade-cloud-three" />
       </div>
+      <p className="arcade-stage-label">Caption gallery</p>
+      <nav className="arcade-time-nav" aria-label="Caption time range">
+        {filterOptions.map(({ key, label }) => (
+          <Link
+            key={key}
+            href={galleryHref(filterHrefs[key], initialSearch)}
+            aria-current={filter === key ? "page" : undefined}
+            onNavigate={() => {
+              if (filter !== key) setIsNavigating(true);
+            }}
+            className="arcade-time-tab"
+            scroll={false}
+          >
+            {label}
+          </Link>
+        ))}
+      </nav>
       <form
         role="search"
         aria-label="Search the caption gallery"
         action={pathname}
         method="get"
         onSubmit={submitSearch}
-        className="mx-auto mb-5 w-full max-w-3xl space-y-3 px-2"
+        className="arcade-search-panel"
       >
         <div>
-          <label htmlFor="caption-search" className="text-lg font-semibold">
+          <label htmlFor="caption-search" className="arcade-search-title">
             Find a caption
           </label>
-          <p id="caption-search-help" className="mt-1 text-sm text-muted-foreground">
+          <p
+            id="caption-search-help"
+            className="mt-1 text-sm text-muted-foreground"
+          >
             Find a word or phrase in the selected time range.
           </p>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row">
+        <div className="arcade-search-actions">
           <div className="relative min-w-0 flex-1">
             <Search
               className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground"
@@ -509,7 +491,7 @@ export default function PopularCaptionsPageClient({
           id="caption-search-draft"
           hidden={!hasDraftSearch || isLoading}
           role="status"
-          className="text-sm font-medium text-primary"
+          className="mt-4 text-sm font-semibold text-primary"
         >
           Search not applied yet. Press Search or Enter to update your results.
         </p>
@@ -518,7 +500,7 @@ export default function PopularCaptionsPageClient({
           role="status"
           aria-live="polite"
           aria-atomic="true"
-          className="min-h-5 text-sm text-muted-foreground"
+          className="arcade-search-status"
         >
           {isLoading
             ? "Loading captions…"
@@ -543,36 +525,34 @@ export default function PopularCaptionsPageClient({
                   "."}
         </p>
       </form>
-      <div className="flex-1 w-full flex flex-col gap-8 p-4 relative">
-        <div
-          className="flex flex-wrap justify-between items-center gap-3
-          w-full max-w-7xl mx-auto px-4"
-        >
-          <Button asChild variant="outline" size="sm">
-            <Link href="/new">New post</Link>
-          </Button>
-          <div className="flex items-center gap-4">
-            <label htmlFor="caption-page-size" className="text-sm text-muted-foreground">
-              Show
-            </label>
-            <select
-              id="caption-page-size"
-              aria-label="Captions to show at a time"
-              value={itemsPerPage}
-              onChange={(event) => handleItemsPerPageChange(event.target.value)}
-              disabled={isLoading || isLoadingMore}
-              className="rounded-lg border border-primary/20 bg-background px-3 py-2 text-sm
+      <div className="arcade-toolbar">
+        <Button asChild variant="secondary" size="sm">
+          <Link href="/new">New post</Link>
+        </Button>
+        <div className="flex items-center gap-2">
+          <label
+            htmlFor="caption-page-size"
+            className="text-sm text-muted-foreground"
+          >
+            Show
+          </label>
+          <select
+            id="caption-page-size"
+            aria-label="Captions to show at a time"
+            value={itemsPerPage}
+            onChange={(event) => handleItemsPerPageChange(event.target.value)}
+            disabled={isLoading || isLoadingMore}
+            className="rounded-lg border border-primary/20 bg-background px-3 py-2 text-sm
                   text-primary focus-visible:outline-none
                   focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              {[4, 8, 12, 16, 20, 24].map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </select>
-            <span className="text-sm text-muted-foreground">at a time</span>
-          </div>
+          >
+            {[4, 8, 12, 16, 20, 24].map((value) => (
+              <option key={value} value={value}>
+                {value}
+              </option>
+            ))}
+          </select>
+          <span className="text-sm text-muted-foreground">at a time</span>
         </div>
       </div>
       <section
@@ -597,10 +577,7 @@ export default function PopularCaptionsPageClient({
             </Button>
           </div>
         ) : visibleCaptions.length === 0 ? (
-          <div
-            className="mx-auto max-w-xl rounded-xl border border-border
-            bg-muted/30 p-8 text-center"
-          >
+          <div className="arcade-empty">
             <h2 className="text-lg font-semibold">
               {initialSearch
                 ? "No matches in " + filterLabel
@@ -608,7 +585,9 @@ export default function PopularCaptionsPageClient({
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
               {initialSearch
-                ? "No public captions in this time range match “" + initialSearch + "”."
+                ? "No public captions in this time range match “" +
+                  initialSearch +
+                  "”."
                 : "There are no public captions in this time range."}
             </p>
             <p className="mt-2 text-sm text-muted-foreground">
@@ -646,7 +625,10 @@ export default function PopularCaptionsPageClient({
 
               let srcSet: string | undefined;
               if (info) {
-                const baseUrl = caption.image_url.split("/").slice(0, 3).join("/");
+                const baseUrl = caption.image_url
+                  .split("/")
+                  .slice(0, 3)
+                  .join("/");
                 const t = generateThumbnailUrls(
                   baseUrl,
                   info.userId,
@@ -669,23 +651,22 @@ export default function PopularCaptionsPageClient({
                   aria-label={"Caption: " + caption.content}
                   className="relative group w-full h-full flex"
                 >
-                  <div
-                    className="relative bg-white dark:bg-[#1a1a1a] rounded-lg overflow-hidden
-                         shadow-md dark:shadow-lg ring-1 ring-gray-200 dark:ring-0
-                         hover:shadow-xl transition-all duration-300 flex flex-col w-full
-                         sm:max-w-[320px] sm:mx-auto"
-                  >
+                  <div className="arcade-caption-card">
                     {/* Top Section - Branding */}
-                    <div className="p-3 flex justify-between items-center">
+                    <div className="arcade-card-header">
                       {/* Left: Crackd branding */}
                       <div className="flex items-center gap-2">
-                        <BrandImage variant="mark" alt="Crackd" className="w-6 h-6" />
-                        <span className="text-primary text-sm font-bold">Crackd</span>
+                        <BrandImage
+                          variant="mark"
+                          alt="Crackd"
+                          className="w-6 h-6"
+                        />
+                        <span className="arcade-card-brand">Crackd</span>
                       </div>
 
                       {/* Right: Upvote/Downvote counter */}
                       <TooltipProvider>
-                        <div className="flex flex-col items-center gap-0">
+                        <div className="arcade-votes">
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button
@@ -699,7 +680,7 @@ export default function PopularCaptionsPageClient({
                                 className={`cursor-pointer transition-colors ${
                                   isUpvoted
                                     ? "text-primary"
-                                    : "text-gray-500 dark:text-gray-400 hover:text-primary"
+                                    : "text-muted-foreground hover:text-primary"
                                 }`}
                               >
                                 <ChevronUp className="w-4 h-4" />
@@ -714,7 +695,7 @@ export default function PopularCaptionsPageClient({
                               <p>Upvote</p>
                             </TooltipContent>
                           </Tooltip>
-                          <span className="text-gray-900 dark:text-white text-sm font-medium">
+                          <span className="text-foreground text-sm">
                             {caption.like_count}
                           </span>
                           <Tooltip>
@@ -730,7 +711,7 @@ export default function PopularCaptionsPageClient({
                                 className={`cursor-pointer transition-colors ${
                                   isDownvoted
                                     ? "text-primary"
-                                    : "text-gray-500 dark:text-gray-400 hover:text-primary"
+                                    : "text-muted-foreground hover:text-primary"
                                 }`}
                               >
                                 <ChevronDown className="w-4 h-4" />
@@ -757,13 +738,13 @@ export default function PopularCaptionsPageClient({
                         focus-visible:outline-none focus-visible:ring-2
                         focus-visible:ring-inset focus-visible:ring-primary"
                     >
-                      <span
-                        className="block px-3 pb-3 text-gray-900 dark:text-white
-                        text-base leading-relaxed font-medium"
-                      >
-                        <CaptionSearchHighlight text={caption.content} query={initialSearch} />
+                      <span className="arcade-caption-copy">
+                        <CaptionSearchHighlight
+                          text={caption.content}
+                          query={initialSearch}
+                        />
                       </span>
-                      <span className="block w-full flex-1 min-h-[320px] px-3 pb-3">
+                      <span className="arcade-caption-art">
                         <Top100CaptionImage
                           src={displayUrl}
                           srcSet={srcSet}
@@ -773,14 +754,11 @@ export default function PopularCaptionsPageClient({
                     </button>
 
                     {/* Bottom Action Bar */}
-                    <div
-                      className="p-3 bg-gray-50 dark:bg-[#1a1a1a] border-t border-gray-200
-                               dark:border-white/10"
-                    >
+                    <div className="arcade-card-footer">
                       <div className="flex items-center justify-between">
                         <div
-                          className="p-2 text-gray-600 dark:text-white hover:bg-gray-200/70
-                                    dark:hover:bg-white/10 rounded transition-colors flex
+                          className="p-2 text-foreground hover:bg-accent
+                                    rounded transition-colors flex
                                     items-center justify-center"
                           onClick={(event) => event.stopPropagation()}
                         >
@@ -791,13 +769,13 @@ export default function PopularCaptionsPageClient({
                           />
                         </div>
                         <div
-                          className="p-2 hover:bg-gray-200/70 dark:hover:bg-white/10 rounded
+                          className="p-2 hover:bg-accent rounded
                                     transition-colors flex items-center justify-center"
                           onClick={(event) => event.stopPropagation()}
                         >
                           <ShareModal
                             shareUrl={shareUrl}
-                            buttonClassName="text-gray-600 dark:text-white"
+                            buttonClassName="text-foreground"
                           />
                         </div>
                       </div>
@@ -815,22 +793,22 @@ export default function PopularCaptionsPageClient({
         )}
         {hasMore && !isLoading && !initialError && (
           <div className="flex justify-center mt-8">
-            <button
+            <Button
               type="button"
               onClick={loadMore}
               disabled={isLoadingMore}
               aria-controls="caption-gallery-results"
-              className="flex items-center gap-2 px-6 py-2
-                bg-primary/20 hover:bg-primary/30 text-primary
-              rounded-full transition-colors duration-200 disabled:cursor-wait disabled:opacity-60"
+              className="gap-2 px-6 disabled:cursor-wait"
             >
-              {isLoadingMore && <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden />}
+              {isLoadingMore && (
+                <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden />
+              )}
               {isLoadingMore
                 ? "Loading captions…"
                 : loadMoreError
                   ? "Try loading more"
                   : "Load More"}
-            </button>
+            </Button>
           </div>
         )}
       </section>

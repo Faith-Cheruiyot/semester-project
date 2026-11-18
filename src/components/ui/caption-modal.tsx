@@ -2,7 +2,12 @@
 
 import { useRef, type ReactNode } from "react";
 import { CaptionViewV2 } from "@/components/ui/caption-view-v2";
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { buildCaptionShareUrl } from "@/utils/site-url";
 
 export type CaptionModalItem = {
@@ -48,7 +53,9 @@ export function CaptionModal({
   const handlePrevious = () => {
     if (!hasMultiple) return;
     onIndexChange(
-      wrapNavigation && safeIndex === 0 ? items.length - 1 : Math.max(0, safeIndex - 1),
+      wrapNavigation && safeIndex === 0
+        ? items.length - 1
+        : Math.max(0, safeIndex - 1),
     );
   };
 
@@ -70,11 +77,13 @@ export function CaptionModal({
     >
       <DialogContent
         data-caption-viewer
-        className="w-[calc(100vw-2rem)] max-w-3xl max-h-[calc(100dvh-2rem)]
-          overflow-y-auto border-0 bg-neutral-950 p-4 text-white shadow-xl"
+        className="arcade-viewer w-[calc(100vw-2rem)] max-w-3xl max-h-[calc(100dvh-2rem)]
+          overflow-y-auto p-4"
         onOpenAutoFocus={() => {
           previousFocus.current =
-            document.activeElement instanceof HTMLElement ? document.activeElement : null;
+            document.activeElement instanceof HTMLElement
+              ? document.activeElement
+              : null;
         }}
         onCloseAutoFocus={(event) => {
           if (previousFocus.current?.isConnected) {
@@ -95,6 +104,7 @@ export function CaptionModal({
                 imageUrl={current.imageUrl}
                 content={current.content}
                 highlightQuery={highlightQuery}
+                tone="auto"
                 saved={savedCaptionIds.includes(current.id)}
                 onSave={onSave}
                 shareUrl={buildCaptionShareUrl(current.id)}
@@ -112,7 +122,9 @@ export function CaptionModal({
             </>
           ) : (
             (emptyState ?? (
-              <p className="text-lg text-center text-white">No captions available.</p>
+              <p className="text-lg text-center text-foreground">
+                No captions available.
+              </p>
             ))
           )}
         </div>

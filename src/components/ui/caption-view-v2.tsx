@@ -135,7 +135,7 @@ export function CaptionViewV2({
     <div className={containerClasses}>
       <div className="flex flex-col items-center w-full">
         {totalCount > 1 && (
-          <p role="status" className={`mb-4 text-sm ${captionTextClass} opacity-70`}>
+          <p role="status" className={`arcade-viewer-position mb-4 ${captionTextClass} opacity-70`}>
             Caption {currentIndex + 1} of {totalCount}
           </p>
         )}
