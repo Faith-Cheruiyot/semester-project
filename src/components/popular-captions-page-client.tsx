@@ -31,7 +31,13 @@ import {
 import { TOP_100_FILTER_HREFS } from "@/lib/top-100";
 import { buildCaptionShareUrl } from "@/utils/site-url";
 import { BrandImage } from "@/components/brand-image";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { CaptionSearchHighlight } from "@/components/caption-search-highlight";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { CaptionModal } from "@/components/ui/caption-modal";
 import { BookmarkButton } from "@/components/ui/bookmark-button";
 import { Top100CaptionImage } from "@/components/top-100-caption-image";
@@ -58,7 +64,9 @@ const generateThumbnailUrls = (
   const basePath = `${baseUrl}/${userId}/${imageId}`;
   return {
     original: `${basePath}.${extension}`,
-    srcSet: THUMBNAIL_SIZES.map((size) => `${basePath}-${size}.${extension} ${size}w`).join(", "),
+    srcSet: THUMBNAIL_SIZES.map((size) => `${basePath}-${size}.${extension} ${size}w`).join(
+      ", ",
+    ),
     gridUrl: `${basePath}-${THUMBNAIL_SIZES.find((s) => s >= 640) || 640}.${extension}`,
     blurUrl: `${basePath}-640.${extension}`,
   };
@@ -261,21 +269,23 @@ export default function PopularCaptionsPageClient({
   };
 
   useEffect(() => {
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && selectedIndex !== null) {
-        handleCloseCarousel();
-      }
-    };
-
     const handleArrowKeys = (event: KeyboardEvent) => {
-      if (selectedIndex === null || popularCaptions.length === 0) return;
+      if (event.defaultPrevented || selectedIndex === null || !popularCaptions.length) return;
+      if (
+        !(event.target instanceof HTMLElement) ||
+        !event.target.closest("[data-caption-viewer]") ||
+        event.target.closest("input, textarea, select, [contenteditable='true']")
+      )
+        return;
 
       if (event.key === "ArrowLeft") {
+        event.preventDefault();
         setSelectedIndex((prev) => {
           if (prev === null) return null;
           return prev === 0 ? popularCaptions.length - 1 : prev - 1;
         });
       } else if (event.key === "ArrowRight") {
+        event.preventDefault();
         setSelectedIndex((prev) => {
           if (prev === null) return null;
           return prev === popularCaptions.length - 1 ? 0 : prev + 1;
@@ -283,10 +293,8 @@ export default function PopularCaptionsPageClient({
       }
     };
 
-    document.addEventListener("keydown", handleEscape);
     document.addEventListener("keydown", handleArrowKeys);
     return () => {
-      document.removeEventListener("keydown", handleEscape);
       document.removeEventListener("keydown", handleArrowKeys);
     };
   }, [selectedIndex, popularCaptions.length]);
@@ -345,7 +353,9 @@ export default function PopularCaptionsPageClient({
       }
     } catch {
       if (request === loadRequest.current) {
-        setLoadMoreError("We couldn’t load more captions. Your current results are still here.");
+        setLoadMoreError(
+          "We couldn’t load more captions. Your current results are still here.",
+        );
       }
     } finally {
       if (request === loadRequest.current) setIsLoadingMore(false);
@@ -362,6 +372,7 @@ export default function PopularCaptionsPageClient({
   const visibleCaptions = popularCaptions.slice(0, visibleCount);
   const hasMore = visibleCaptions.length < totalCount;
   const filterLabel = filterOptions.find((option) => option.key === filter)?.label;
+  const hasDraftSearch = normalizeGallerySearch(searchInput) !== initialSearch;
 
   return (
     <div className="container mx-auto px-1 py-1">
@@ -383,7 +394,13 @@ export default function PopularCaptionsPageClient({
                        }`}
             style={{
               transform: `translateX(${
-                filter === "week" ? 0 : filter === "past30" ? 100 : filter === "year" ? 200 : 300
+                filter === "week"
+                  ? 0
+                  : filter === "past30"
+                    ? 100
+                    : filter === "year"
+                      ? 200
+                      : 300
               }%)`,
             }}
           />
@@ -445,7 +462,7 @@ export default function PopularCaptionsPageClient({
             Find a caption
           </label>
           <p id="caption-search-help" className="mt-1 text-sm text-muted-foreground">
-            Search public captions by a word or phrase you remember.
+            Find a word or phrase in the selected time range.
           </p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
@@ -462,7 +479,8 @@ export default function PopularCaptionsPageClient({
               onChange={(event) => setSearchInput(event.target.value)}
               placeholder="Try Butler, midterms, or a phrase…"
               maxLength={GALLERY_SEARCH_MAX_LENGTH}
-              aria-describedby="caption-search-help caption-search-status"
+              disabled={isLoading}
+              aria-describedby="caption-search-help caption-search-draft caption-search-status"
               aria-controls="caption-gallery-results"
               className="h-10 pl-10"
             />
@@ -487,6 +505,14 @@ export default function PopularCaptionsPageClient({
             </Button>
           )}
         </div>
+        <p
+          id="caption-search-draft"
+          hidden={!hasDraftSearch || isLoading}
+          role="status"
+          className="text-sm font-medium text-primary"
+        >
+          Search not applied yet. Press Search or Enter to update your results.
+        </p>
         <p
           id="caption-search-status"
           role="status"
@@ -518,7 +544,13 @@ export default function PopularCaptionsPageClient({
         </p>
       </form>
       <div className="flex-1 w-full flex flex-col gap-8 p-4 relative">
-        <div className="flex justify-end items-center w-full max-w-7xl mx-auto px-4">
+        <div
+          className="flex flex-wrap justify-between items-center gap-3
+          w-full max-w-7xl mx-auto px-4"
+        >
+          <Button asChild variant="outline" size="sm">
+            <Link href="/new">New post</Link>
+          </Button>
           <div className="flex items-center gap-4">
             <label htmlFor="caption-page-size" className="text-sm text-muted-foreground">
               Show
@@ -565,21 +597,45 @@ export default function PopularCaptionsPageClient({
             </Button>
           </div>
         ) : visibleCaptions.length === 0 ? (
-          <div className="mx-auto max-w-xl rounded-xl border border-border
-            bg-muted/30 p-8 text-center">
+          <div
+            className="mx-auto max-w-xl rounded-xl border border-border
+            bg-muted/30 p-8 text-center"
+          >
             <h2 className="text-lg font-semibold">
-              {initialSearch ? "No matching captions" : "No captions in this time range"}
+              {initialSearch
+                ? "No matches in " + filterLabel
+                : "No captions in " + filterLabel}
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
               {initialSearch
-                ? "Try a shorter phrase, check the spelling, or choose a different time range."
-                : "Try another time range to explore the gallery."}
+                ? "No public captions in this time range match “" + initialSearch + "”."
+                : "There are no public captions in this time range."}
             </p>
-            {initialSearch && (
-              <Button type="button" variant="outline" onClick={clearSearch} className="mt-4">
-                Clear search
-              </Button>
-            )}
+            <p className="mt-2 text-sm text-muted-foreground">
+              {filter !== "all"
+                ? "Try All Time to look beyond this time range."
+                : initialSearch
+                  ? "Try fewer words or check the spelling."
+                  : "Check back soon for more captions."}
+            </p>
+            <div className="mt-4 flex flex-wrap justify-center gap-3">
+              {filter !== "all" && (
+                <Button asChild>
+                  <Link
+                    href={galleryHref(allTimeHref, initialSearch)}
+                    onNavigate={() => setIsNavigating(true)}
+                    scroll={false}
+                  >
+                    {initialSearch ? "Search all time" : "Browse all time"}
+                  </Link>
+                </Button>
+              )}
+              {initialSearch && (
+                <Button type="button" variant="outline" onClick={clearSearch}>
+                  Clear search
+                </Button>
+              )}
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -591,7 +647,12 @@ export default function PopularCaptionsPageClient({
               let srcSet: string | undefined;
               if (info) {
                 const baseUrl = caption.image_url.split("/").slice(0, 3).join("/");
-                const t = generateThumbnailUrls(baseUrl, info.userId, info.imageId, info.extension);
+                const t = generateThumbnailUrls(
+                  baseUrl,
+                  info.userId,
+                  info.imageId,
+                  info.extension,
+                );
                 displayUrl = t.gridUrl;
                 srcSet = t.srcSet;
               }
@@ -602,10 +663,11 @@ export default function PopularCaptionsPageClient({
               const isDownvoted = currentVote === -1;
 
               return (
-                <div
+                <article
                   key={caption.id}
-                  className="relative cursor-pointer group w-full h-full flex"
-                  onClick={() => handleImageClick(index)}
+                  data-caption-id={caption.id}
+                  aria-label={"Caption: " + caption.content}
+                  className="relative group w-full h-full flex"
                 >
                   <div
                     className="relative bg-white dark:bg-[#1a1a1a] rounded-lg overflow-hidden
@@ -627,6 +689,9 @@ export default function PopularCaptionsPageClient({
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button
+                                type="button"
+                                aria-label="Upvote caption"
+                                aria-pressed={isUpvoted}
                                 onClick={(event) => {
                                   event.stopPropagation();
                                   handleVote(caption.id, 1);
@@ -655,6 +720,9 @@ export default function PopularCaptionsPageClient({
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button
+                                type="button"
+                                aria-label="Downvote caption"
+                                aria-pressed={isDownvoted}
                                 onClick={(event) => {
                                   event.stopPropagation();
                                   handleVote(caption.id, -1);
@@ -681,20 +749,28 @@ export default function PopularCaptionsPageClient({
                       </TooltipProvider>
                     </div>
 
-                    {/* Caption Text - Below header */}
-                    <div className="px-3 pb-3">
-                      <p
-                        className="text-gray-900 dark:text-white text-base leading-relaxed
-                                 font-medium"
+                    <button
+                      type="button"
+                      onClick={() => handleImageClick(index)}
+                      aria-label={"View caption: " + caption.content}
+                      className="flex flex-1 w-full flex-col text-left
+                        focus-visible:outline-none focus-visible:ring-2
+                        focus-visible:ring-inset focus-visible:ring-primary"
+                    >
+                      <span
+                        className="block px-3 pb-3 text-gray-900 dark:text-white
+                        text-base leading-relaxed font-medium"
                       >
-                        {caption.content}
-                      </p>
-                    </div>
-
-                    {/* Main Image */}
-                    <div className="w-full flex-1 min-h-[320px] px-3 pb-3">
-                      <Top100CaptionImage src={displayUrl} srcSet={srcSet} captionId={caption.id} />
-                    </div>
+                        <CaptionSearchHighlight text={caption.content} query={initialSearch} />
+                      </span>
+                      <span className="block w-full flex-1 min-h-[320px] px-3 pb-3">
+                        <Top100CaptionImage
+                          src={displayUrl}
+                          srcSet={srcSet}
+                          captionId={caption.id}
+                        />
+                      </span>
+                    </button>
 
                     {/* Bottom Action Bar */}
                     <div
@@ -727,7 +803,7 @@ export default function PopularCaptionsPageClient({
                       </div>
                     </div>
                   </div>
-                </div>
+                </article>
               );
             })}
           </div>
@@ -773,21 +849,9 @@ export default function PopularCaptionsPageClient({
           savedCaptionIds={savedCaptions}
           onSave={handleSlideSave}
           wrapNavigation
+          highlightQuery={initialSearch}
         />
       )}
-
-      {/* New Post button */}
-      <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-40">
-        <a
-          href="/new"
-          className="flex items-center justify-center w-48 h-12 rounded-full
-                    bg-primary text-primary-foreground font-bold text-lg shadow-lg
-                    hover:bg-primary/90 transition-colors duration-200
-                    select-none"
-        >
-          New Post
-        </a>
-      </div>
       {/* Login Prompt Modal */}
       <LoginPromptModal
         open={showLoginPrompt}

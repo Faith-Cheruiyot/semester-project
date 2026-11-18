@@ -29,3 +29,25 @@ export function galleryHref(pathname: string, search: string): string {
   const query = normalizeGallerySearch(search);
   return query ? `${pathname}?${new URLSearchParams({ q: query })}` : pathname;
 }
+
+export type CaptionMatchPart = { text: string; matched: boolean };
+
+export function captionMatchParts(text: string, search: string): CaptionMatchPart[] {
+  const query = normalizeGallerySearch(search);
+  if (!query) return [{ text, matched: false }];
+
+  const pattern = query.replace(/[.*+?^{}$()|[\]\\]/g, "\\$&");
+  const parts: CaptionMatchPart[] = [];
+  let offset = 0;
+  for (const match of text.matchAll(new RegExp(pattern, "giu"))) {
+    if (match.index > offset) {
+      parts.push({ text: text.slice(offset, match.index), matched: false });
+    }
+    parts.push({ text: match[0], matched: true });
+    offset = match.index + match[0].length;
+  }
+  if (offset < text.length || !parts.length) {
+    parts.push({ text: text.slice(offset), matched: false });
+  }
+  return parts;
+}

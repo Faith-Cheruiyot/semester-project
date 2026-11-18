@@ -224,6 +224,9 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
 
 	return (
 		<motion.button
+			type="button"
+			aria-label={bookmarked ? "Remove saved caption" : "Save caption"}
+			aria-pressed={bookmarked}
 			className={`relative p-0 bg-transparent border-0 cursor-pointer ${
 				bookmarked ? "bookmarked" : ""
 			}`}

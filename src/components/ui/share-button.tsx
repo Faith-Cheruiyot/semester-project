@@ -1,5 +1,5 @@
-import { motion } from 'framer-motion'
-import { useId, useMemo } from 'react'
+import { motion, type HTMLMotionProps } from 'framer-motion'
+import { forwardRef, useId, useMemo } from 'react'
 
 type ShareIconProps = {
   shared: boolean
@@ -188,31 +188,32 @@ const Particles: React.FC<ParticlesProps> = ({
   )
 }
 
-type ShareButtonProps = {
+type ShareButtonProps = Omit<HTMLMotionProps<'button'>, 'children'> & {
   shared: boolean
-  onClick: () => void
   iconWidth: number
   iconHeight: number
-  className?: string
 }
 
-export const ShareButton: React.FC<ShareButtonProps> = ({
+export const ShareButton = forwardRef<HTMLButtonElement, ShareButtonProps>(function ShareButton({
   shared = false,
-  onClick,
   iconWidth,
   iconHeight,
   className = 'text-white',
-}) => {
+  ...buttonProps
+}, ref) {
   return (
     <motion.button
+      type="button"
+      aria-label="Share caption"
+      {...buttonProps}
+      ref={ref}
       className={`relative p-0 bg-transparent border-0 cursor-pointer ${className} ${
         shared ? 'shared' : ''
       }`}
       whileTap={{ scale: 0.7 }}
-      onClick={onClick}
     >
       <ShareAnimation shared={shared} />
       <ShareIcon shared={shared} iconWidth={iconWidth} iconHeight={iconHeight} />
     </motion.button>
   )
-}
+})
